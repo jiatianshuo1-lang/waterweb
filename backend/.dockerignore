@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+db.sqlite3
+media/
+staticfiles/
+logs/
+.venv/
+venv/
+.idea/
+.vscode/
+*.swp
+Dockerfile
+.dockerignore
+entrypoint.sh
+requirements.txt
