@@ -38,7 +38,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      network: host
     container_name: waterweb-backend
     restart: unless-stopped
     environment:
@@ -69,7 +68,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      network: host
     container_name: waterweb-frontend
     restart: unless-stopped
     ports:
