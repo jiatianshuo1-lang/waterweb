@@ -13,5 +13,3 @@ venv/
 *.swp
 Dockerfile
 .dockerignore
-entrypoint.sh
-requirements.txt
