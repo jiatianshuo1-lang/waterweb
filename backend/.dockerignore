@@ -14,4 +14,3 @@ venv/
 Dockerfile
 .dockerignore
 entrypoint.sh
-requirements.txt
