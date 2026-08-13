@@ -1,7 +1,8 @@
 FROM node:20-alpine AS build
 WORKDIR /app
+RUN npm config set registry https://registry.npmmirror.com
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY . .
 RUN npm run build
 
