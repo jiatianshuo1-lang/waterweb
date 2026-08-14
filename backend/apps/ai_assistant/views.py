@@ -169,11 +169,9 @@ class AiChatViewSet(viewsets.ViewSet):
 
         session = self._get_or_create_session(request, data.get("session_id"))
         config = session.config or AiService.get_active_config()
-        if not config:
-            raise BusinessException("请先在后台配置 AI 模型")
 
         # 历史对话（排除刚发的这条）
-        history_msgs = self._build_history_messages(session, config.max_history)
+        history_msgs = self._build_history_messages(session, config.max_history if config else 10)
 
         # 调用 Agent
         from .agent.core import run_agent, run_agent_fallback
@@ -182,7 +180,7 @@ class AiChatViewSet(viewsets.ViewSet):
         role = request.user.role or "viewer"
         role_name = request.user.get_role_display() or "只读用户"
 
-        if config.api_key and config.api_key.strip():
+        if config and config.api_key and config.api_key.strip():
             agent_result = run_agent(
                 user_message=user_message,
                 config=config,
@@ -244,7 +242,7 @@ class AiChatViewSet(viewsets.ViewSet):
                 {"title": d["title"], "type": d["type"], "score": d.get("score", 0)}
                 for d in agent_result.rag_used
             ],
-            "is_simulated": (not (config.api_key and config.api_key.strip())
+            "is_simulated": (not (config and config.api_key and config.api_key.strip())
                              or any(call.get("is_simulated", False) for call in agent_result.tool_calls)),
             "role": role,
             "available_tools": TOOL_PERMISSIONS.get(role, []),

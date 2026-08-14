@@ -4,10 +4,15 @@ DEBUG = False
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'waterweb.example.com').split(',')
 
-SECURE_SSL_REDIRECT = os.environ.get('FORCE_HTTPS', 'False').lower() == 'true'
+USE_HTTPS = os.environ.get('FORCE_HTTPS', 'False').lower() == 'true'
+SECURE_SSL_REDIRECT = USE_HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# 公网 IP + HTTP 部署时不能发送 Secure Cookie；启用 HTTPS 后自动收紧。
+SESSION_COOKIE_SECURE = USE_HTTPS
+CSRF_COOKIE_SECURE = USE_HTTPS
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
+]
 SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0'))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
 SECURE_HSTS_PRELOAD = False
