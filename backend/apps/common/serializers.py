@@ -10,9 +10,8 @@ class RegionSerializer(serializers.ModelSerializer):
         model = RegionModel
         fields = [
             'id', 'code', 'name', 'region_type', 'parent', 'parent_name',
-            'geometry', 'description', 'sort_order', 'children', 'created_at', 'updated_at'
+            'geometry', 'description', 'sort_order', 'children'
         ]
-        read_only_fields = ['created_at', 'updated_at']
 
     def get_children(self, obj):
         if hasattr(obj, 'children') and obj.children.exists():

@@ -4,7 +4,8 @@ import sys
 
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+    # config.settings 根据 DJANGO_ENV 选择开发/生产配置；管理命令必须与 Gunicorn 使用同一套设置。
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

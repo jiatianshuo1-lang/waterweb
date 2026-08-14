@@ -75,9 +75,12 @@ export const generateForecast = (data) => request.post('/soil-weather/forecasts/
 export const getSoilOverview = () => request.get('/soil-weather/forecasts/overview/')
 
 export const sendAiMessage = (data) => request.post('/ai/chat/send/', data)
+export const sendAiAgentMessage = (data) => request.post('/ai/chat/agent/', data)
 export const getAiSessions = () => request.get('/ai/chat/sessions/')
 export const getAiHistory = (sessionId) => request.get('/ai/chat/history/', { params: { session_id: sessionId } })
 export const createAiSession = () => request.post('/ai/chat/new-session/')
 export const deleteAiSession = (sessionId) => request.delete('/ai/chat/session/', { params: { session_id: sessionId } })
 export const getAiConfigs = (params) => request.get('/ai/configs/', { params })
 export const getAiKnowledge = (params) => request.get('/ai/knowledge/', { params })
+export const getAiTools = () => request.get('/ai/tools/')
+export const getAiToolLogs = (params) => request.get('/ai/chat/tool-logs/', { params })
