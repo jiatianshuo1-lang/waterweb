@@ -11,6 +11,3 @@ venv/
 .idea/
 .vscode/
 *.swp
-Dockerfile
-.dockerignore
-entrypoint.sh
