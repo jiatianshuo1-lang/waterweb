@@ -30,11 +30,33 @@ logger = logging.getLogger("apps.ai_assistant")
 PROVIDER_URLS = {
     "deepseek": "https://api.deepseek.com/v1/chat/completions",
     "openai": "https://api.openai.com/v1/chat/completions",
-    "azure": None,  # Azure URL 由 config.api_url 指定
+    "azure": None,  # Azure URL 由 config.api_url 指定（完整）
     "qwen": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
     "doubao": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
     "ollama": None,  # Ollama 走本地
 }
+
+
+_CHAT_PATH_HINTS = ("/chat/completions", "/completions")
+
+
+def _resolve_api_url(configured: str, default: str) -> str:
+    """
+    用户可能填：
+      - 完整路径：https://api.deepseek.com/v1/chat/completions  → 原样用
+      - 只给 base：https://api.deepseek.com / https://api.deepseek.com/ → 拼上 default 的 path
+      - Azure/Ollama 这种 default=None 的 → 原样用（用户必须填完整）
+    """
+    if not configured:
+        return default
+    lower = configured.lower().rstrip("/")
+    if any(hint in lower for hint in _CHAT_PATH_HINTS):
+        return configured.rstrip("/")
+    if default:
+        from urllib.parse import urlparse
+        parsed = urlparse(default)
+        return f"{configured.rstrip('/')}{parsed.path}"
+    return configured
 
 
 def _build_headers(api_key: str) -> Dict[str, str]:
@@ -55,10 +77,16 @@ def call_llm(
     返回 LLM 原始 choice 对象（包含 content 或 tool_calls）。
     """
     provider = config.provider or "deepseek"
-    api_url = config.api_url or PROVIDER_URLS.get(provider, PROVIDER_URLS["deepseek"])
+    configured_url = (config.api_url or "").strip()
+    default_url = PROVIDER_URLS.get(provider, PROVIDER_URLS["deepseek"])
 
     if provider == "ollama":
-        api_url = api_url or "http://localhost:11434/v1/chat/completions"
+        default_url = "http://localhost:11434/v1/chat/completions"
+
+    if configured_url:
+        api_url = _resolve_api_url(configured_url, default_url)
+    else:
+        api_url = default_url
 
     if not api_url:
         raise ValueError(f"未配置 {provider} 的 API 地址")
