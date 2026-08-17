@@ -336,6 +336,17 @@ def _ingest_text_into_chunks(
     return len(objs)
 
 
+def _sanitize_text(text: str) -> str:
+    """PostgreSQL 不允许 NUL (0x00)，同时清理控制字符和过长空白。"""
+    if not text:
+        return text
+    text = text.replace("\x00", "")
+    text = re.sub(r"[\x01-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def _create_document_record(
     name: str,
     raw: bytes,
@@ -383,6 +394,8 @@ def _create_document_record(
         doc.parser = "none"
         doc.save()
         return doc
+
+    text = _sanitize_text(text)
 
     doc.parser = meta.get("parser", source_type)
     doc.parser_version = meta.get("version", "")
