@@ -54,7 +54,7 @@ def _parse_plain_bytes(raw: bytes, source_type: str) -> Tuple[str, dict]:
     raise UploadIngestionError(f"无法解码 {source_type} 文件：{last_err}")
 
 
-def _parse_pdf(raw: bytes) -> Tuple[str, dict]:
+def _parse_pdf(raw: bytes, _ext: str = "") -> Tuple[str, dict]:
     try:
         from PyPDF2 import PdfReader
     except ImportError:
@@ -72,7 +72,7 @@ def _parse_pdf(raw: bytes) -> Tuple[str, dict]:
     return text, metadata
 
 
-def _parse_docx(raw: bytes) -> Tuple[str, dict]:
+def _parse_docx(raw: bytes, _ext: str = "") -> Tuple[str, dict]:
     try:
         from docx import Document
     except ImportError:
@@ -88,7 +88,7 @@ def _parse_docx(raw: bytes) -> Tuple[str, dict]:
     return text, {"parser": "python-docx"}
 
 
-def _parse_html(raw: bytes) -> Tuple[str, dict]:
+def _parse_html(raw: bytes, _ext: str = "") -> Tuple[str, dict]:
     import html
     try:
         import lxml.html  # 可选
