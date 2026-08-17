@@ -1,0 +1,75 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+
+<h1>📂 上传知识库文档</h1>
+<p style="color:#666;margin:8px 0 16px;">选择文件后直接上传，系统自动解析、分块、入库。不需要填写其他字段。</p>
+
+{% if messages %}
+  <div class="messages">
+    {% for m in messages %}
+      <div class="{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+  <div class="module" style="padding:18px;">
+    <h2>方式 ① 上传单个文档 / 压缩包</h2>
+    <p>
+      <b>支持格式：</b><br>
+      文本类：.txt / .md / .csv / .json / .xml / .yaml / .yml / .html<br>
+      文档类：.pdf / .docx<br>
+      压缩包：.zip / .tar.gz / .tgz / .tar（压缩包会被自动解包并批量入库）
+    </p>
+
+    <form method="post" enctype="multipart/form-data" style="margin-top:14px;">
+      {% csrf_token %}
+      <div style="border:2px dashed #417690;border-radius:8px;padding:22px;text-align:center;background:#f4f7f9;">
+        <p style="font-size:36px;margin:0 0 8px;">📤</p>
+        <p style="margin:0 0 12px;">选择文件（或压缩包）</p>
+        <input type="file" name="file" required style="padding:6px;">
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:#888;">
+        也可以在 Windows 资源管理器里直接把文件拖到上面的选择框。
+      </p>
+      <div style="margin-top:14px;">
+        <button type="submit" class="button default" style="padding:8px 22px;">🚀 开始导入</button>
+        <a href="../" class="button" style="margin-left:8px;">返回列表</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="module" style="padding:18px;">
+    <h2>📁 方式 ② 批量上传（多文件）</h2>
+    <p>一次选择多个文件，系统逐个解析并入库。</p>
+    <form method="post" enctype="multipart/form-data" style="margin-top:14px;">
+      {% csrf_token %}
+      <div style="border:2px dashed #417690;border-radius:8px;padding:22px;text-align:center;background:#f4f7f9;">
+        <p style="font-size:36px;margin:0 0 8px;">🗂️</p>
+        <p style="margin:0 0 12px;">按住 Ctrl / Cmd 选择多个文件</p>
+        <input type="file" name="file" multiple required style="padding:6px;">
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:#888;">
+        批量上传时所有文件都会被标记为「公开」（is_public=True）。
+      </p>
+      <div style="margin-top:14px;">
+        <button type="submit" class="button default" style="padding:8px 22px;">📦 批量导入</button>
+        <a href="../" class="button" style="margin-left:8px;">返回列表</a>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+<div class="module" style="margin-top:20px;padding:16px;">
+  <h3>💡 说明</h3>
+  <ul>
+    {% for t in help_texts %}<li>{{ t }}</li>{% endfor %}
+  </ul>
+  <p style="color:#666;font-size:12px;margin-top:8px;">
+    已存在相同 checksum 的文档会被自动跳过，不会重复入库。
+  </p>
+</div>
+
+{% endblock %}

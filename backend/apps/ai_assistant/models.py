@@ -108,8 +108,9 @@ class AiKnowledgeDocument(BaseModel):
 
     STATUS_CHOICES = [("pending", "待处理"), ("ready", "可检索"), ("failed", "处理失败")]
     title = models.CharField(max_length=200, verbose_name="文档标题")
-    source_path = models.CharField(max_length=500, verbose_name="导入源路径")
-    source_type = models.CharField(max_length=30, default="pdf", verbose_name="源文件类型")
+    file = models.FileField(upload_to="ai_knowledge/%Y%m%d/", blank=True, null=True, verbose_name="源文件")
+    source_path = models.CharField(max_length=500, blank=True, verbose_name="导入源路径")
+    source_type = models.CharField(max_length=30, default="txt", verbose_name="源文件类型")
     checksum = models.CharField(max_length=64, db_index=True, verbose_name="SHA256")
     parser = models.CharField(max_length=30, default="text", verbose_name="解析器")
     parser_version = models.CharField(max_length=50, blank=True, verbose_name="解析器版本")
@@ -118,6 +119,7 @@ class AiKnowledgeDocument(BaseModel):
     error_message = models.TextField(blank=True, verbose_name="失败原因")
     region = models.ForeignKey("common.RegionModel", on_delete=models.SET_NULL, null=True, blank=True)
     is_public = models.BooleanField(default=True)
+    created_by = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="knowledge_documents")
 
     class Meta:
         verbose_name = "RAG 原始文档"
