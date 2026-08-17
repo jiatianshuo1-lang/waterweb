@@ -5,8 +5,8 @@ from django.shortcuts import render
 from django.urls import path, reverse
 from django.utils.html import format_html
 
-from .models import (AiAssistantConfig, AiChatSession, AiChatMessage, AiKnowledge,
-                     AiKnowledgeDocument, AiKnowledgeChunk, AiToolLog)
+from .models import (AiAssistantConfig, AiChatSession, AiChatMessage,
+                     AiKnowledgeDocument, AiToolLog)
 from .agent.upload_ingestion import UploadIngestionError, ingest_uploaded_file
 
 
@@ -56,27 +56,7 @@ class AiToolLogAdmin(admin.ModelAdmin):
 
 
 # ---------------------------------------------------------------------------
-# AiKnowledge — 简化表单（只填必要的）
-# ---------------------------------------------------------------------------
-
-@admin.register(AiKnowledge)
-class AiKnowledgeAdmin(admin.ModelAdmin):
-    list_display = ["title", "knowledge_type", "region", "is_public", "created_at"]
-    list_filter = ["knowledge_type", "is_public"]
-    search_fields = ["title", "content"]
-
-    # 只给用户看最必要的
-    fields = ["title", "knowledge_type", "content", "is_public"]
-
-    def save_model(self, request, obj, form, change):
-        # 自动生成 summary 和 tags（如果没填）
-        if obj.content and (not obj.summary or obj.summary.strip() == ""):
-            obj.summary = (obj.content[:160] + "...") if len(obj.content) > 160 else obj.content
-        super().save_model(request, obj, form, change)
-
-
-# ---------------------------------------------------------------------------
-# AiKnowledgeDocument — 真正的文件上传入口 + 批量导入 + 压缩包
+# AiKnowledgeDocument — 文件上传入口 + 批量导入 + 压缩包
 # ---------------------------------------------------------------------------
 
 @admin.register(AiKnowledgeDocument)
@@ -233,12 +213,4 @@ class AiKnowledgeDocumentAdmin(admin.ModelAdmin):
             reverse("admin:ai_assistant_aiknowledgedocument_changelist"))
 
 
-@admin.register(AiKnowledgeChunk)
-class AiKnowledgeChunkAdmin(admin.ModelAdmin):
-    list_display = ["document", "ordinal", "page_start", "token_estimate", "content_short"]
-    search_fields = ["content"]
-    list_filter = ["document__source_type"]
 
-    @admin.display(description="内容预览")
-    def content_short(self, obj):
-        return obj.content[:80] + ("..." if len(obj.content) > 80 else "")
