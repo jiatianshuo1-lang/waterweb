@@ -29,6 +29,20 @@ flowchart LR
 
 ## 导入资料
 
+### 用户上传接口
+
+已提供登录态接口 `POST /api/v1/ai/knowledge/upload/`。前端只展示一个必填的“选择文件”，以及三个可选项：标题（留空自动使用文件名）、关联区域、是否公开（默认公开）。系统管理员、超级管理员和灌区负责人可以上传；普通用户只能检索公开资料。
+
+```bash
+curl -X POST "https://your-domain/api/v1/ai/knowledge/upload/" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "file=@防汛应急预案.pdf" \
+  -F "title=防汛应急预案" \
+  -F "is_public=true"
+```
+
+支持 PDF、PNG/JPG、MD/TXT、DOCX/PPTX/XLSX 和 ZIP。ZIP 最多 15 个资料、解压后最多 250 MB；单次上传最多 50 MB。扫描 PDF/图片和 Office 文档需配置 MinerU；解析失败会返回清晰原因且不进入检索。
+
 服务器上的原始资料目录固定建议为 `/opt/waterweb/data/knowledge/`；在 `.env` 中设置
 `KNOWLEDGE_SOURCE_DIR=/opt/waterweb/data/knowledge` 后，它会以只读方式挂载到后端容器的
 `/data/knowledge/`。该目录保存原始 PDF/图片/Markdown，不存向量；解析后的分块和（后续）向量索引保存在 PostgreSQL 中。

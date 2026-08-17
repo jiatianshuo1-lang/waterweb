@@ -82,5 +82,9 @@ export const createAiSession = () => request.post('/ai/chat/new-session/')
 export const deleteAiSession = (sessionId) => request.delete('/ai/chat/session/', { params: { session_id: sessionId } })
 export const getAiConfigs = (params) => request.get('/ai/configs/', { params })
 export const getAiKnowledge = (params) => request.get('/ai/knowledge/', { params })
+export const uploadAiKnowledge = (formData) => request.post('/ai/knowledge/upload/', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+})
+export const getAiKnowledgeDocuments = () => request.get('/ai/knowledge/documents/')
 export const getAiTools = () => request.get('/ai/tools/')
 export const getAiToolLogs = (params) => request.get('/ai/chat/tool-logs/', { params })

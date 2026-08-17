@@ -59,6 +59,26 @@ class AiKnowledgeSerializer(serializers.ModelSerializer):
         read_only_fields = ["created_at", "updated_at"]
 
 
+class KnowledgeUploadSerializer(serializers.Serializer):
+    """只暴露用户完成一次导入真正需要填写的字段。"""
+    file = serializers.FileField()
+    title = serializers.CharField(required=False, allow_blank=True, max_length=200)
+    region = serializers.IntegerField(required=False, allow_null=True)
+    is_public = serializers.BooleanField(default=True)
+
+
+class KnowledgeDocumentSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    source_type = serializers.CharField()
+    parser = serializers.CharField()
+    status = serializers.CharField()
+    error_message = serializers.CharField()
+    is_public = serializers.BooleanField()
+    chunk_count = serializers.IntegerField()
+    created_at = serializers.DateTimeField()
+
+
 class ChatRequestSerializer(serializers.Serializer):
     session_id = serializers.CharField(required=False)
     message = serializers.CharField()
@@ -350,6 +370,51 @@ class AiKnowledgeViewSet(viewsets.ModelViewSet):
     search_fields = ["title", "content", "tags"]
     serializer_class = AiKnowledgeSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.is_staff or self.request.user.role in {"super_admin", "admin"}:
+            return queryset
+        return queryset.filter(is_public=True)
+
+    @action(detail=False, methods=["post"], url_path="upload")
+    def upload(self, request):
+        """上传一个资料或 ZIP；后端负责安全解包、解析、分块和建立 RAG 索引。"""
+        if not (request.user.is_staff or request.user.role in {"super_admin", "admin", "manager"}):
+            raise BusinessException("仅系统管理员或灌区负责人可以导入知识库资料")
+        serializer = KnowledgeUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        region = None
+        if data.get("region"):
+            from apps.common.models import RegionModel
+            region = RegionModel.objects.filter(pk=data["region"]).first()
+            if not region:
+                raise BusinessException("关联区域不存在")
+        from .agent.upload_ingestion import UploadIngestionError, ingest_uploaded_file
+        try:
+            documents = ingest_uploaded_file(
+                data["file"], user=request.user, title=data.get("title", ""),
+                region=region, is_public=data["is_public"],
+            )
+        except UploadIngestionError as exc:
+            raise BusinessException(str(exc)) from exc
+        return created_response(data={
+            "documents": [{"id": item.id, "title": item.title, "status": item.status,
+                           "chunks": item.chunks.count(), "parser": item.parser} for item in documents]
+        }, message="资料已导入知识库")
+
+    @action(detail=False, methods=["get"], url_path="documents")
+    def documents(self, request):
+        """查看上传资料的解析状态，供前端在上传后轮询或展示历史记录。"""
+        from django.db.models import Count, Q
+        from .models import AiKnowledgeDocument
+        documents = AiKnowledgeDocument.objects.annotate(chunk_count=Count("chunks")).order_by("-created_at")
+        if not (request.user.is_staff or request.user.role in {"super_admin", "admin"}):
+            documents = documents.filter(Q(is_public=True) | Q(created_by=request.user))
+        page = self.paginate_queryset(documents) if hasattr(self, "paginate_queryset") else None
+        serializer = KnowledgeDocumentSerializer(page or documents[:100], many=True)
+        return success_response(data=serializer.data)
 
 
 class AiToolLogViewSet(viewsets.ReadOnlyModelViewSet):

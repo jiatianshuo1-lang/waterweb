@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import io
+import mimetypes
 import os
 from pathlib import Path
 from typing import Dict
@@ -24,7 +24,7 @@ def parse_file(path: str, timeout: int = 1_800) -> Dict:
     with source.open("rb") as handle:
         response = requests.post(
             f"{api_url}/file_parse",
-            files={"files": (source.name, handle, "application/pdf")},
+            files={"files": (source.name, handle, mimetypes.guess_type(source.name)[0] or "application/octet-stream")},
             data={"lang_list": "ch", "parse_method": "auto", "return_md": "true", "return_content_list": "true"},
             timeout=timeout,
         )

@@ -20,7 +20,7 @@ def checksum(path: Path) -> str:
 
 def read_document(path: Path) -> Tuple[str, str, dict]:
     suffix = path.suffix.lower()
-    if suffix in {".pdf", ".png", ".jpg", ".jpeg"}:
+    if suffix in {".pdf", ".png", ".jpg", ".jpeg", ".docx", ".pptx", ".xlsx"}:
         from .mineru import parse_file
         parsed = parse_file(str(path))
         return parsed["markdown"], "mineru", {"source_suffix": suffix}
